@@ -13,7 +13,48 @@ class FileManagementWindow(QWidget):
         self.setWindowTitle(f"Gestionar Archivos - {company} ({role})")
         self.setGeometry(0, 0, 1600, 900)
         self.showMaximized()
-        self.setStyleSheet("background-color: #2C2F33; color: #FFFFFF; font-size: 14px;")
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #1E1E1E;  /* Fondo negro */
+                color: #FFFFFF;  /* Texto blanco */
+                font-size: 14px;
+            }
+            QLineEdit, QComboBox {
+                padding: 8px;
+                border-radius: 5px;
+                border: 1px solid #FF8C00;  /* Borde naranja */
+                background-color: #2E2E2E;  /* Fondo gris oscuro */
+                color: #FFFFFF;
+            }
+            QPushButton {
+                padding: 8px;
+                border-radius: 5px;
+                background-color: #FF8C00;  /* Fondo naranja */
+                color: #FFFFFF;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #FFA500;  /* Naranja más claro al pasar el mouse */
+            }
+            QTableWidget {
+                background-color: #2E2E2E;  /* Fondo gris oscuro */
+                color: #FFFFFF;
+                border: 1px solid #FF8C00;  /* Borde naranja */
+            }
+            QHeaderView::section {
+                background-color: #FF8C00;  /* Encabezados de tabla en naranja */
+                color: #FFFFFF;
+                padding: 5px;
+                border: none;
+            }
+            QCheckBox {
+                color: #FFFFFF;
+            }
+            QMessageBox {
+                background-color: #1E1E1E;  /* Fondo negro */
+                color: #FFFFFF;  /* Texto blanco */
+            }
+        """)
 
         self.company = company
         self.role = role
@@ -192,3 +233,4 @@ class FileManagementWindow(QWidget):
         if self.go_back_callback:
             self.go_back_callback()
         self.close()
+
