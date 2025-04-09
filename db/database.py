@@ -1,11 +1,103 @@
 import shutil
 import sqlite3
 import os
+import sys
+import glob
+
+def get_project_root():
+    """Get the root directory of the project regardless of how the app is executed."""
+    # Handle both development environment and bundled app
+    if getattr(sys, 'frozen', False):
+        # Running as bundled executable
+        return os.path.dirname(sys.executable)
+    else:
+        # Running in development environment
+        # Get the directory where the script is located
+        current_path = os.path.dirname(os.path.abspath(__file__))
+        # Navigate to the project root (one level up from db/)
+        return os.path.dirname(current_path)
+
+def get_db_path():
+    """Get full path to database file."""
+    root_dir = get_project_root()
+    db_dir = os.path.join(root_dir, "db")
+    os.makedirs(db_dir, exist_ok=True)  # Ensure db directory exists
+    return os.path.join(db_dir, "invoice_manager.db")
 
 def get_db_connection():
-    conn = sqlite3.connect("db/invoice_manager.db", check_same_thread=False)
+    """Get connection to SQLite database with proper path handling."""
+    conn = sqlite3.connect(get_db_path(), check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
+
+def validate_and_create_db():
+    """Check if database exists, create it and initialize tables if it doesn't."""
+    db_path = get_db_path()
+    db_exists = os.path.isfile(db_path)
+    
+    if not db_exists:
+        print(f"Database not found. Creating new database at: {db_path}")
+        # Create empty database file
+        conn = sqlite3.connect(db_path)
+        conn.close()
+        
+        # Initialize tables
+        initialize_db()
+        
+        # Load data from SQL files
+        load_sql_data()
+        return False
+    else:
+        print(f"Database found at: {db_path}")
+        return True
+
+def load_sql_data():
+    """Load data from SQL files in the data directory."""
+    root_dir = get_project_root()
+    data_dir = os.path.join(root_dir, "db", "data")
+    
+    if not os.path.exists(data_dir):
+        print(f"Data directory not found at: {data_dir}")
+        return
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Get all SQL files in the data directory
+    sql_files = glob.glob(os.path.join(data_dir, "*.sql"))
+    
+    if not sql_files:
+        print(f"No SQL files found in: {data_dir}")
+        conn.close()
+        return
+    
+    try:
+        for sql_file in sql_files:
+            file_name = os.path.basename(sql_file)
+            print(f"Loading data from: {file_name}")
+            
+            with open(sql_file, 'r', encoding='utf-8') as f:
+                sql_content = f.read()
+                
+            # Split by semicolon to execute multiple statements
+            statements = sql_content.split(';')
+            
+            for statement in statements:
+                if statement.strip():
+                    cursor.execute(statement)
+            
+            print(f"Successfully loaded: {file_name}")
+        
+        conn.commit()
+        print("All SQL data loaded successfully")
+    except sqlite3.Error as e:
+        print(f"SQLite error loading data: {e}")
+        conn.rollback()
+    except Exception as e:
+        print(f"Error loading SQL data: {e}")
+        conn.rollback()
+    finally:
+        conn.close()
 
 def initialize_db():
     conn = get_db_connection()
@@ -97,8 +189,13 @@ def initialize_db():
             SELECT 1, 1 WHERE NOT EXISTS (SELECT 1 FROM quotation_numbers WHERE id = 1)
         ''')
 
-        os.makedirs("images/logos", exist_ok=True)
+        # Asegurar que la carpeta de imágenes existe
+        root_dir = get_project_root()
+        logos_dir = os.path.join(root_dir, "images", "logos")
+        os.makedirs(logos_dir, exist_ok=True)
+        
         conn.commit()
+        print("Database tables created successfully")
 
     finally:
         conn.close()
@@ -154,7 +251,7 @@ def assign_user_to_company(user_rut, company_rut):
     conn.close()
 
 def save_logo(file_path):
-    logo_dir = "images/logos"
+    logo_dir = os.path.join(get_project_root(), "images", "logos")
     os.makedirs(logo_dir, exist_ok=True)
     file_name = os.path.basename(file_path)
     destination = os.path.join(logo_dir, file_name)

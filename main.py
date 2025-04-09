@@ -1,10 +1,10 @@
 import sys
 from PySide6.QtWidgets import QApplication
 from ui.login import LoginWindow
-from db.database import initialize_db
+from db.database import validate_and_create_db
 
 def main():
-    initialize_db()
+    validate_and_create_db()
     app = QApplication(sys.argv)
     window = LoginWindow()
     window.show()
