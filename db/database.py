@@ -52,49 +52,37 @@ def validate_and_create_db():
         return True
 
 def load_sql_data():
-    """Load data from SQL files in the data directory."""
-    root_dir = get_project_root()
-    data_dir = os.path.join(root_dir, "db", "data")
-    
-    if not os.path.exists(data_dir):
-        print(f"Data directory not found at: {data_dir}")
-        return
+    """Load data directly from Python code instead of SQL files."""
+    print("Loading data directly from Python...")
     
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Get all SQL files in the data directory
-    sql_files = glob.glob(os.path.join(data_dir, "*.sql"))
-    
-    if not sql_files:
-        print(f"No SQL files found in: {data_dir}")
-        conn.close()
-        return
-    
     try:
-        for sql_file in sql_files:
-            file_name = os.path.basename(sql_file)
-            print(f"Loading data from: {file_name}")
-            
-            with open(sql_file, 'r', encoding='utf-8') as f:
-                sql_content = f.read()
-                
-            # Split by semicolon to execute multiple statements
-            statements = sql_content.split(';')
-            
-            for statement in statements:
-                if statement.strip():
-                    cursor.execute(statement)
-            
-            print(f"Successfully loaded: {file_name}")
+        # Companies data
+        print("Loading companies data...")
+        companies_data = """INSERT INTO companies(id,name,address,logo_path,email,rut,phone,city,giro,representative_name,representative_id,representative_email,representative_phone,bank_name,account_type,account_number) VALUES(1,'Agencia Onblack Spa','Doctor Cossio #333','images/logos/OnBlack.png','agenciaonblack@gmail.com','77.203.666-3','43-2492700','Los Ángeles,Chile','Marketing y Publicidad','Cristian Montero Seguel','17.870.191-6','cristian@agenciaonblack.cl ','+569-65971427','Santander','Corriente','0-000-9679550-5'),(2,'Oficina virtual Spa','Doctor Cossio #333','images/logos/OnOffice(1).png','contacto@onoffice.cl','77.239.418-7','43-2492700','Los Ángeles, Chile','Arriendo de oficinas virtuales','Cristian Montero Seguel','17.870.191-6','contacto@onoffice.cl','+569-65971427','Santander','Vista','0-070-18-70288-0'),(4,'ArtePrint','Doctor Cossio #333','images/logos/ArtePrint.png','publicidadarteprint@gmail.com ','12.262.345-9','4322492700','Los Ángeles,chile','Publicidad e imprenta','Felipe M. Muñoz Sáez','12.262.345-9','felipe@publicidadarteprint.cl','+56979692604','Estado','Vista','537-000-27-411')"""
+        
+        # Users data (add your users data here from the users_users.sql file)
+        print("Loading users data...")
+        users_data = """INSERT INTO users(id,rut,password,role) VALUES(10,'19.372.940-1','$2b$12$ldNauDPzX3y8TeuGhnSsiuN1lx5Jz2SEGDn3jk9YLyHq/Ydatn25m','User'),(15,'20.954.371-0','$2b$12$MOUvQzIVFrnGR51zbOyasew698fQ7Xot5qiHAlxuvDzCg3tmBZx0y','Admin'),(16,'15.628.651-6','$2b$12$piqVZEDvvV2Oknl34/9H7O1EJNg9XDq9yphr9GM0IYtxgc276IzFK','User'),(17,'17.870.191-6','$2b$12$3H4w0vHxfGagVF3rjNjfPe8M7KPHXN7fz91mh/VHALCcSTKDXdupy','User'),(18,'12.262.345-8','$2b$12$j4UzjtKb.c0cQG4m5Ex6mumalHnrTVQhg/3MmA4EWe76dkNWM6Sd6','User')"""
+        
+        # User-Companies relationships
+        print("Loading user-companies relationships...")
+        user_companies_data = """INSERT INTO user_companies(user_id,company_id) VALUES(1,3),(2,1),(2,2),(3,3),(4,2),(4,1),(5,2),(5,1),(6,2),(6,1),(5,3),(7,3),(7,1),(7,2),(8,1),(8,2),(9,1),(9,2),(10,2),(10,1),(11,3),(12,2),(12,1),(13,2),(13,1),(13,3),(14,3),(15,3),(15,2),(15,1),(16,4),(17,2),(17,1),(18,2),(18,1),(18,4)"""
+        
+        # Execute all statements
+        for statement in [companies_data, users_data, user_companies_data]:
+            if statement.strip():
+                cursor.execute(statement)
         
         conn.commit()
-        print("All SQL data loaded successfully")
+        print("All data loaded successfully")
     except sqlite3.Error as e:
         print(f"SQLite error loading data: {e}")
         conn.rollback()
     except Exception as e:
-        print(f"Error loading SQL data: {e}")
+        print(f"Error loading data: {e}")
         conn.rollback()
     finally:
         conn.close()

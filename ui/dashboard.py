@@ -6,6 +6,7 @@ from ui.invoice_creation import QuotationCreationWindow
 from ui.change_password import ChangePasswordWindow
 from ui.support_window import SupportWindow  # Importa la nueva ventana de soporte
 from ui.components import create_button
+from utils.images import resource_path
 
 
 class DashboardWindow(QWidget):
@@ -17,7 +18,7 @@ class DashboardWindow(QWidget):
         self.showMaximized()
 
         # 🔥 CONFIGURAR IMAGEN DE FONDO
-        background_image = QPixmap("path/background.jpg")  # Ruta de la imagen
+        background_image = QPixmap(resource_path("path/background.jpg"))  # Ruta de la imagen
         if not background_image.isNull():
             palette = QPalette()
             palette.setBrush(QPalette.Window, QBrush(background_image.scaled(self.size(), Qt.KeepAspectRatioByExpanding)))

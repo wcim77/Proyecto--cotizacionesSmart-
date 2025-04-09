@@ -1,6 +1,7 @@
 import sqlite3
+from db.database import get_db_path
 
-def reset_quotation_number(db_path="db/invoice_manager.db"):
+def reset_quotation_number(db_path=get_db_path()):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute("UPDATE quotation_numbers SET current_number = 0")

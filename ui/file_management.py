@@ -233,4 +233,3 @@ class FileManagementWindow(QWidget):
         if self.go_back_callback:
             self.go_back_callback()
         self.close()
-

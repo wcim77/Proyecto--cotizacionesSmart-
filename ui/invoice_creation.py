@@ -10,10 +10,12 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus.paragraph import ParagraphStyle
 from db.database import get_next_quotation_number, save_quotation_number, save_custom_quotation_number, is_quotation_number_used
-from reportlab.lib.styles import ParagraphStyle 
+from reportlab.lib.styles import ParagraphStyle
+from db.database import get_db_path
+from utils.images import resource_path
 
 class QuotationCreationWindow(QWidget):
-    def __init__(self, company, role, db_path="db/invoice_manager.db", go_back_callback=None):
+    def __init__(self, company, role, go_back_callback=None):
         super().__init__()
         self.setWindowTitle(f"Crear Cotización - {company}")
         self.setGeometry(QRect(100, 100, 1400, 800))  # Ajuste de tamaño de ventana
@@ -21,7 +23,7 @@ class QuotationCreationWindow(QWidget):
 
         self.company = company
         self.role = role
-        self.db_path = db_path
+        self.db_path = get_db_path()
         self.go_back_callback = go_back_callback
 
         # 📌 **Estilos con Alto Contraste**
@@ -281,7 +283,7 @@ class QuotationCreationWindow(QWidget):
             styles = getSampleStyleSheet()
 
             # --- ENCABEZADO: LOGO IZQUIERDA + DATOS REPRESENTANTE MÁS A LA DERECHA ---
-            logo_path = company_details.get("logo_path")
+            logo_path = resource_path(company_details.get("logo_path"))
             if (logo_path and os.path.exists(logo_path)):
                 logo = Image(logo_path, width=90, height=90)
             else:

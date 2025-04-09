@@ -8,7 +8,7 @@ class ChangePasswordWindow(QWidget):
     def __init__(self, username=None):
         super().__init__()
         self.setWindowTitle("Cambiar Contraseña")
-        self.setFixedSize(400, 400)
+        self.setFixedSize(450, 450)
 
         self.username = username  # El nombre de usuario que cambiará la contraseña
 
@@ -18,7 +18,7 @@ class ChangePasswordWindow(QWidget):
 
         container_frame = QFrame(self)
         container_frame.setStyleSheet("background-color: #23272A; border-radius: 15px; padding: 30px;")
-        container_frame.setFixedSize(350, 350)
+        container_frame.setFixedSize(450, 450)
 
         container_layout = QVBoxLayout(container_frame)
         container_layout.setAlignment(Qt.AlignCenter)

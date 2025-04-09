@@ -10,6 +10,7 @@ from PySide6.QtCore import Qt, QRect
 from utils.auth import authenticate_user, recover_password_button, get_companies_by_rut
 from ui.dashboard import DashboardWindow
 from ui.programmer_dashboard import DeveloperDashboardWindow
+from utils.images import resource_path
 
 
 class LoginWindow(QWidget):
@@ -23,7 +24,7 @@ class LoginWindow(QWidget):
 
         # Fondo con imagen difuminada
         palette = QPalette()
-        background_image = QPixmap("path/image.jpg")
+        background_image = QPixmap(resource_path("path/image.jpg"))
         palette.setBrush(QPalette.Window, QBrush(background_image.scaled(self.size(), Qt.KeepAspectRatioByExpanding)))
         self.setPalette(palette)
 
