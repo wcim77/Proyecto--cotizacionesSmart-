@@ -10,6 +10,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus.paragraph import ParagraphStyle
 from db.database import get_next_quotation_number, save_quotation_number, save_custom_quotation_number, is_quotation_number_used
+from reportlab.lib.styles import ParagraphStyle 
 
 class QuotationCreationWindow(QWidget):
     def __init__(self, company, role, db_path="db/invoice_manager.db", go_back_callback=None):
@@ -166,7 +167,7 @@ class QuotationCreationWindow(QWidget):
         # 📌 **Navegación**
         navigation_layout = QHBoxLayout()
 
-        self.export_button = QPushButton("Exporta", self)
+        self.export_button = QPushButton("Guardar", self)
         self.export_button.setObjectName("export_pdf")
         self.export_button.clicked.connect(self.export_to_pdf)
         navigation_layout.addWidget(self.export_button)
@@ -259,11 +260,11 @@ class QuotationCreationWindow(QWidget):
 
     def export_to_pdf(self):
         numero_cotizacion = self.quotation_number_input.text()
-        fecha_cotizacion = self.date_input.date().toString("yyyyMMdd")
+        fecha_cotizacion = self.date_input.date().toString("dd-MM-yyyy")
         nombre_cliente = self.client_name_input.text().replace(" ", "_")  # Reemplaza espacios por guiones bajos
 
         # Concatenar número de cotización y fecha
-        nombre_archivo = f"{numero_cotizacion}-{fecha_cotizacion[:4]}-{fecha_cotizacion[4:6]}-{nombre_cliente}.pdf"
+        nombre_archivo = f"{fecha_cotizacion}-{numero_cotizacion}-{nombre_cliente}.pdf"
 
         file_path, _ = QFileDialog.getSaveFileName(self, "Guardar Cotización", nombre_archivo, "PDF Files (*.pdf)")
         if file_path:
@@ -273,7 +274,7 @@ class QuotationCreationWindow(QWidget):
             company_details = self.get_company_details()  # Retrieve company details
 
             doc = SimpleDocTemplate(file_path, pagesize=letter)
-            doc.title = f"{numero_cotizacion}-{fecha_cotizacion[:4]}-{fecha_cotizacion[4:6]}-{nombre_cliente}"
+            doc.title = f"{fecha_cotizacion}-cotizacion-{numero_cotizacion}-{nombre_cliente}"
             doc.author = company_details.get('representative_name', 'N/A')
 
             elements = []
@@ -281,7 +282,7 @@ class QuotationCreationWindow(QWidget):
 
             # --- ENCABEZADO: LOGO IZQUIERDA + DATOS REPRESENTANTE MÁS A LA DERECHA ---
             logo_path = company_details.get("logo_path")
-            if logo_path and os.path.exists(logo_path):
+            if (logo_path and os.path.exists(logo_path)):
                 logo = Image(logo_path, width=90, height=90)
             else:
                 logo = Paragraph("", styles["Normal"])  # Espacio en blanco si no hay logo
@@ -312,7 +313,7 @@ class QuotationCreationWindow(QWidget):
             elements.append(Spacer(1, 20))
 
             # --- NÚMERO DE COTIZACIÓN Y FECHA ---
-            folio_fecha = f"{numero_cotizacion}-{fecha_cotizacion[:4]}-{fecha_cotizacion[4:6]}"
+            folio_fecha = f"{fecha_cotizacion}-{numero_cotizacion}"
             quotation_info = Table([
                 [Paragraph(f"<b>Numero de serie :</b> {folio_fecha}", styles["Normal"])]
             ], colWidths=[450, 50])  # Se aumenta la primera columna para evitar desplazamientos
@@ -337,8 +338,20 @@ class QuotationCreationWindow(QWidget):
 
             elements.append(Spacer(1, 20))
 
+            
+
             # --- TABLA DE PRODUCTOS ---
             table_data = [["CANT", "DETALLE", "NETO", "IVA", "TOTAL"]]  # Encabezados
+
+            # Estilo para el texto de las descripciones
+            description_style = ParagraphStyle(
+                name="DescriptionStyle",
+                fontName="Helvetica",
+                fontSize=10,
+                leading=12,  # Espaciado entre líneas
+                textColor=colors.black,
+                alignment=0,  # Alineación izquierda
+            )
 
             for row in range(self.table.rowCount()):
                 cantidad = self.table.item(row, 0).text() if self.table.item(row, 0) else ""
@@ -346,23 +359,27 @@ class QuotationCreationWindow(QWidget):
                 neto = self.table.item(row, 2).text() if self.table.item(row, 2) else ""
                 iva = self.table.item(row, 3).text() if self.table.item(row, 3) else ""
                 total = self.table.item(row, 4).text() if self.table.item(row, 4) else ""
-                table_data.append([cantidad, detalle, neto, iva, total])
+
+                # Usar Paragraph para la descripción
+                detalle_paragraph = Paragraph(detalle, description_style)
+
+                table_data.append([cantidad, detalle_paragraph, neto, iva, total])
 
             # Aplicar estilo de letras naranjo para encabezados y negro para datos
             table_style = TableStyle([
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.orange),  # Encabezados en naranjo
-            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),  # Datos en negro
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),  # Fondo para el encabezado
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Fuente en negrita para encabezados
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),  # Fuente normal para datos
-            ('BOX', (0, 0), (-1, -1), 1.5, colors.black),  # Borde general de la tabla (más grueso)
-            ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.grey),  # Líneas internas más suaves
-            ('ROUNDEDCORNERS', (0, 0), (-1, -1), 5),  # Simulación de bordes redondeados
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.orange),  # Encabezados en naranjo
+                ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),  # Datos en negro
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),  # Fondo para el encabezado
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Fuente en negrita para encabezados
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),  # Fuente normal para datos
+                ('BOX', (0, 0), (-1, -1), 1.5, colors.black),  # Borde general de la tabla (más grueso)
+                ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.grey),  # Líneas internas más suaves
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),  # Alineación vertical superior
             ])
 
             # CREACIÓN DE TABLA
-            table = Table(table_data, colWidths=[50, 250, 80, 80, 80])
+            table = Table(table_data, colWidths=[50, 250, 80, 80, 80])  # Ajusta los anchos de las columnas
             table.setStyle(table_style)
 
             elements.append(table)
